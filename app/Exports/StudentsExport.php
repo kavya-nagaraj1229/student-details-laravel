@@ -9,7 +9,6 @@ class StudentsExport implements FromCollection, WithHeadings
 {
     public function collection()
     {
-        // Admin sees all students, student sees only their own
         if(session('role')==='admin'){
             return Student::all();
         } else {

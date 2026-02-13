@@ -56,7 +56,7 @@ class StudentController extends Controller
             'student_id' => $student->id
         ]);
 
-        return redirect()->route('students.index')->with('success','Student added successfully');
+        return redirect()->route('students.index');
     }
 
     // edit
@@ -83,7 +83,7 @@ class StudentController extends Controller
         ]);
 
         $student->update($request->all());
-        return redirect()->route('students.index')->with('success','Student updated successfully');
+        return redirect()->route('students.index');
     }
 
     // edit
@@ -94,7 +94,7 @@ class StudentController extends Controller
         }
 
         $student->delete();
-        return redirect()->route('students.index')->with('success','Student deleted successfully');
+        return redirect()->route('students.index');
     }
 
     // logout
