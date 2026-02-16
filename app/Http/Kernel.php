@@ -4,4 +4,3 @@ protected $routeMiddleware = [
 
     'checkLogin' => \App\Http\Middleware\CheckLogin::class,
 ];
-

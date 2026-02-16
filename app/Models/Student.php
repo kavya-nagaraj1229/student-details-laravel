@@ -10,4 +10,3 @@ class Student extends Model
 
     public $timestamps = false; 
 }
-

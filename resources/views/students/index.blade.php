@@ -20,11 +20,13 @@
 
 @if(session('role')==='admin')
 <div class="space-x-3">
-<a href="{{ route('students.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded">+ Add Student</a>
+   <a href="{{ route('students.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded">+ Add Student</a>
 <a href="{{ route('students.pdf') }}" class="bg-red-600 text-white px-4 py-2 rounded">PDF</a>
 <a href="{{ route('students.excel') }}" class="bg-green-600 text-white px-4 py-2 rounded">Excel</a>
+
 </div>
 @endif
+
 </div>
 
 <table class="w-full border text-sm">
@@ -99,14 +101,12 @@ Delete
 
 @if(session('role')==='student')
 <td class="p-2 border text-center">
-<a href="{{ route('students.student.pdf',$student->id) }}"
-   class="bg-red-600 text-white px-2 py-1 rounded text-xs">PDF</a>
+    <a href="{{ route('students.student.pdf', $student->id) }}" class="bg-red-600 text-white px-2 py-1 rounded text-xs">PDF</a>
 
 </td>
 
 <td class="p-2 border text-center">
-<a href="{{ route('students.student.excel',$student->id) }}"
-   class="bg-green-600 text-white px-2 py-1 rounded text-xs">Excel</a>
+  <a href="{{ route('students.student.excel', $student->id) }}" class="bg-green-600 text-white px-2 py-1 rounded text-xs">Excel</a>
 </td>
 @endif
 

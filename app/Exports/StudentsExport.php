@@ -20,4 +20,3 @@ class StudentsExport implements FromCollection
         return Student::all();
     }
 }
-

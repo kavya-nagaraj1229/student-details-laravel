@@ -33,7 +33,7 @@ class StudentController extends Controller
         return view('students.create');
     }
 
-    //store the student data
+    // store the student data
     public function store(Request $request)
     {
         if (session('role') !== 'admin') {
@@ -66,7 +66,6 @@ class StudentController extends Controller
             'files' => json_encode($filesArr)
         ]);
 
-
         $username = strtolower($student->name);
         $existing = DB::table('users')->where('username', $username)->first();
         if (!$existing) {
@@ -81,7 +80,7 @@ class StudentController extends Controller
         return redirect()->route('students.index');
     }
 
-    //edit 
+    // edit student
     public function edit(Student $student)
     {
         if (session('role') !== 'admin') {
@@ -143,7 +142,7 @@ class StudentController extends Controller
         return redirect()->route('students.index');
     }
 
-    //login
+    // login
     public function login(Request $request)
     {
         $request->validate([
@@ -179,7 +178,22 @@ class StudentController extends Controller
         return redirect('/');
     }
 
-    // pdf download
+    // ✅ Export all students PDF using mPDF
+    public function exportPDF()
+    {
+        $students = Student::all(); // get all students
+
+        $html = view('students.pdf', compact('students'))->render();
+
+        $mpdf = new Mpdf();
+        $mpdf->WriteHTML($html);
+
+        return response($mpdf->Output('students.pdf', 'S'))
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="students.pdf"');
+    }
+
+    // Export single student PDF (optional)
     public function exportStudentPDF($id)
     {
         $students = Student::where('id', $id)->get();
@@ -193,14 +207,20 @@ class StudentController extends Controller
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'attachment; filename="student.pdf"');
     }
+// Export all students to Excel
+public function exportExcel()
+{
+    // Make sure StudentsExport without ID handles all students
+    return Excel::download(new StudentsExport(), 'students.xlsx');
+}
 
-    //excel download
-    public function exportStudentExcel($id)
-    {
-        return Excel::download(new StudentsExport($id), 'student.xlsx');
-    }
+// Export single student to Excel
+public function exportStudentExcel($id)
+{
+    return Excel::download(new StudentsExport($id), 'student.xlsx');
+}
 
-
+    // Delete uploaded file
     public function deleteFile(Request $request)
     {
         $student = Student::findOrFail($request->student_id);
