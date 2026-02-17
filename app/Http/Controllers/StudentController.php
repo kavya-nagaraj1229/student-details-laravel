@@ -2,240 +2,175 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Student;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Models\Student;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+
 use Mpdf\Mpdf;
-use App\Exports\StudentsExport;
+use Mpdf\Output\Destination;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\StudentsExport;
 
 class StudentController extends Controller
 {
-    // all student list
     public function index()
     {
-        if (session('role') === 'admin') {
-            $students = Student::all();
+        $user = Auth::user();
+
+        if ($user->role == 'admin') {
+            $students = Student::get();
+            
+      
+          
+           
         } else {
-            $students = Student::where('id', session('student_id'))->get();
+            $students = Student::where('id', $user->id)->get();
+             
         }
+     
 
         return view('students.index', compact('students'));
     }
 
-    // add new student
     public function create()
     {
-        if (session('role') !== 'admin') {
-            return redirect()->route('students.index');
-        }
         return view('students.create');
     }
 
-    // store the student data
-    public function store(Request $request)
-    {
-        if (session('role') !== 'admin') {
-            return redirect()->route('students.index');
+    
+public function store(Request $request)
+{
+    // Validation
+    $request->validate([
+        'name'  => 'required|string|max:255',
+        'email' => 'required|email|unique:students,email',
+        'age'   => 'required|integer|min:1',
+        'dob'   => 'required|date',
+        'files.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf|max:2048'
+    ]);
+
+    // Prepare data
+    $data = $request->only(['name','email','age','dob']);
+    
+  
+
+    // Handle files if uploaded
+    if ($request->hasFile('files')) {
+        $uploaded = [];
+        foreach ($request->file('files') as $file) {
+            $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
+            $file->move(public_path('uploads/images'), $filename);
+            $uploaded[] = $filename;
         }
-
-        $request->validate([
-            'name'  => 'required',
-            'email' => 'required|email|unique:students',
-            'age'   => 'required|integer',
-            'dob'   => 'required|date',
-            'files.*' => 'mimes:jpg,png,pdf,docx|max:2048'
-        ]);
-
-        // Upload files
-        $filesArr = [];
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $file) {
-                $name = time() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads/images'), $name);
-                $filesArr[] = $name;
-            }
-        }
-
-        $student = Student::create([
-            'name'  => $request->name,
-            'email' => $request->email,
-            'age'   => $request->age,
-            'dob'   => $request->dob,
-            'files' => json_encode($filesArr)
-        ]);
-
-        $username = strtolower($student->name);
-        $existing = DB::table('users')->where('username', $username)->first();
-        if (!$existing) {
-            DB::table('users')->insert([
-                'username'   => $username,
-                'password'   => Hash::make('stud123'),
-                'role'       => 'student',
-                'student_id' => $student->id
-            ]);
-        }
-
-        return redirect()->route('students.index');
+        $data['files'] = json_encode($uploaded);
     }
 
-    // edit student
+    // Create student
+    Student::create($data);
+
+    return redirect()->route('students.index')
+                     ->with('success','Student added successfully!');
+}
+
     public function edit(Student $student)
     {
-        if (session('role') !== 'admin') {
-            return redirect()->route('students.index');
-        }
         return view('students.edit', compact('student'));
     }
 
-    // update
     public function update(Request $request, Student $student)
     {
         $request->validate([
-            'name'  => 'required',
-            'email' => 'required|email',
-            'age'   => 'required|numeric',
+            'name'  => 'required|string|max:255',
+            'email' => 'required|email|unique:students,email,'.$student->id,
+            'age'   => 'required|integer|min:1',
             'dob'   => 'required|date',
-            'files.*' => 'mimes:jpg,png,pdf,docx|max:2048'
+            'files.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf|max:2048'
         ]);
 
-        $student->name  = $request->name;
-        $student->email = $request->email;
-        $student->age   = $request->age;
-        $student->dob   = $request->dob;
-
-        $oldFiles = $student->files ? json_decode($student->files, true) : [];
+        $data = $request->only(['name','email','age','dob']);
 
         if ($request->hasFile('files')) {
+            $uploaded = [];
             foreach ($request->file('files') as $file) {
-                $name = time() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads/images'), $name);
-                $oldFiles[] = $name;
+                $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
+                $file->move(public_path('uploads/images'), $filename);
+                $uploaded[] = $filename;
             }
+            $existing = $student->files ? json_decode($student->files) : [];
+            $data['files'] = json_encode(array_merge($existing, $uploaded));
         }
 
-        $student->files = json_encode($oldFiles);
-        $student->save();
+        $student->update($data);
 
-        return back();
+        return redirect()->route('students.index')->with('success', 'Student updated successfully!');
     }
 
-    // delete
     public function destroy(Student $student)
     {
-        if (session('role') !== 'admin') {
-            return redirect()->route('students.index');
-        }
-
-        if ($student->files) {
-            foreach (json_decode($student->files, true) as $f) {
-                $filePath = public_path('uploads/images/' . $f);
-                if (file_exists($filePath)) {
-                    @unlink($filePath);
-                }
+        if($student->files){
+            foreach(json_decode($student->files) as $file){
+                $path = public_path('uploads/images/'.$file);
+                if(file_exists($path)) unlink($path);
             }
         }
 
         $student->delete();
-
-        return redirect()->route('students.index');
+        return redirect()->route('students.index')->with('success', 'Student deleted successfully!');
     }
 
-    // login
-    public function login(Request $request)
+    public function deleteFile(Student $student, $filename)
     {
-        $request->validate([
-            'username' => 'required',
-            'password' => 'required',
-        ]);
+        $user = Auth::user();
 
-        $user = DB::table('users')->where('username', $request->username)->first();
-
-        if (!$user) {
-            return back()->with('error', 'User not found');
+        if ($user->role !== 'admin' && $user->email !== $student->email) {
+            abort(403, 'Unauthorized');
         }
 
-        if (!isset($user->PASSWORD)) {
-            return back()->with('error', 'Password not set for user');
+        $files = $student->files ? json_decode($student->files, true) : [];
+
+        if (($key = array_search($filename, $files)) !== false) {
+            unset($files[$key]);
+            $path = public_path('uploads/images/'.$filename);
+            if (file_exists($path)) unlink($path);
         }
 
-        if (!Hash::check($request->password, $user->PASSWORD)) {
-            return back()->with('error', 'Wrong password');
-        }
-
-        session()->put('user_id', $user->id);
-        session()->put('role', $user->ROLE);
-        session()->put('student_id', $user->student_id);
-
-        return redirect('/students');
-    }
-
-    // logout
-    public function logout()
-    {
-        session()->forget(['user_id', 'role', 'student_id']);
-        return redirect('/');
-    }
-
-    // ✅ Export all students PDF using mPDF
-    public function exportPDF()
-    {
-        $students = Student::all(); // get all students
-
-        $html = view('students.pdf', compact('students'))->render();
-
-        $mpdf = new Mpdf();
-        $mpdf->WriteHTML($html);
-
-        return response($mpdf->Output('students.pdf', 'S'))
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="students.pdf"');
-    }
-
-    // Export single student PDF (optional)
-    public function exportStudentPDF($id)
-    {
-        $students = Student::where('id', $id)->get();
-
-        $html = view('students.pdf', compact('students'))->render();
-
-        $mpdf = new Mpdf();
-        $mpdf->WriteHTML($html);
-
-        return response($mpdf->Output('', 'S'))
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="student.pdf"');
-    }
-// Export all students to Excel
-public function exportExcel()
-{
-    // Make sure StudentsExport without ID handles all students
-    return Excel::download(new StudentsExport(), 'students.xlsx');
-}
-
-// Export single student to Excel
-public function exportStudentExcel($id)
-{
-    return Excel::download(new StudentsExport($id), 'student.xlsx');
-}
-
-    // Delete uploaded file
-    public function deleteFile(Request $request)
-    {
-        $student = Student::findOrFail($request->student_id);
-
-        $files = json_decode($student->files, true);
-        $files = array_values(array_diff($files, [$request->file]));
-
-        $filePath = public_path('uploads/images/' . $request->file);
-        if (file_exists($filePath)) {
-            @unlink($filePath);
-        }
-
-        $student->files = json_encode($files);
+        $student->files = json_encode(array_values($files));
         $student->save();
 
-        return back();
+        return back()->with('success', 'File deleted successfully!');
+    }
+
+    // Admin PDF
+    public function exportPdf()
+    {
+        $user = Auth::user();
+        if ($user->role !== 'admin') abort(403, 'Unauthorized');
+
+        $students = Student::all();
+        $html = view('students.pdf', compact('students'))->render();
+        $mpdf = new Mpdf();
+        $mpdf->WriteHTML($html);
+        return $mpdf->Output('students.pdf', Destination::DOWNLOAD);
+    }
+
+    // Single student PDF
+    public function studentPdf(Student $student)
+    {
+        $user = Auth::user();
+        if ($user->role === 'student' && $user->id !== $student->id) abort(403, 'Unauthorized');
+
+        $html = view('students.pdf', ['students'=>[$student]])->render();
+        $mpdf = new Mpdf();
+        $mpdf->WriteHTML($html);
+        return $mpdf->Output('student.pdf', Destination::DOWNLOAD);
+    }
+
+    public function exportExcel()
+    {
+        $user = Auth::user();
+        if ($user->role !== 'admin') abort(403, 'Unauthorized');
+
+        return Excel::download(new StudentsExport, 'students.xlsx');
     }
 }

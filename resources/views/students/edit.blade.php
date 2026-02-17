@@ -31,7 +31,7 @@
 
 <div>
 <label class="block text-sm font-medium font-bold">Name</label>
-<input type="text" name="name" value="{{ $student->NAME }}" class="w-full border p-2 rounded" required>
+<input type="text" name="name" value="{{ $student->name }}" class="w-full border p-2 rounded" required>
 </div>
 
 <div>
@@ -49,14 +49,17 @@
 <input type="date" name="dob" value="{{ $student->dob }}" class="w-full border p-2 rounded" required>
 </div>
 
+<div>
 <label class="block font-semibold">Upload Files</label>
 <input type="file" name="files[]" multiple class="w-full border p-2 rounded">
+</div>
 
 <button class="w-full bg-green-600 text-white py-2 rounded">
 Update Student
 </button>
 
 </form>
+
 @if($student->files)
 <hr class="my-4">
 <h3 class="font-bold mb-2">Uploaded Files</h3>
@@ -66,24 +69,20 @@ Update Student
 
     <span class="text-sm">{{ $file }}</span>
 
-    <div class="space-x-2">
-    
+<form action="{{ route('students.files.delete', [$student, urlencode($file)]) }}" method="POST" class="inline">
 
-        <form action="{{ route('students.files.delete') }}" method="POST" class="inline">
-            @csrf
-            <input type="hidden" name="student_id" value="{{ $student->id }}">
-            <input type="hidden" name="file" value="{{ $file }}">
-            <button onclick="return"
-                    class="text-red-600 text-4XL font-bold">
-                X
-            </button>
-        </form>
-    </div>
+    @csrf
+    @method('DELETE')
+    <button type="submit" 
+            onclick="return confirm('Are you sure you want to delete this file?')" 
+            class="text-red-600 font-bold text-xl">
+        X
+    </button>
+</form>
 
 </div>
 @endforeach
 @endif
-
 
 </div>
 </body>

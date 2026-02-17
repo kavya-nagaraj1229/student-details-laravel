@@ -3,36 +3,45 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Student;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class AuthController extends Controller
 {
     public function showLoginForm()
     {
-        return view('auth.login');
+        return view('login');
     }
 
+    // Login
     public function login(Request $request)
     {
+        
         $request->validate([
-            'username'=>'required',
-            'password'=>'required'
+            'username' => 'required|string',
+            'password' => 'required|string'
         ]);
 
-        $user = DB::table('users')->where('username', $request->username)->first();
+        $user = User::where('username', $request->username)->first();
 
-        if($user && Hash::check($request->password, $user->password)) {
-            session(['user_id' => $user->id]);
-            return redirect('/students');
-        } else {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return back()->with('error', 'Invalid username or password');
+            
         }
+
+        Auth::login($user);
+
+        return redirect()->route('students.index');
     }
 
-    public function logout()
+    // Logout
+    public function logout(Request $request)
     {
-        session()->forget('user_id');
-        return redirect('/login');
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login.form');
     }
 }

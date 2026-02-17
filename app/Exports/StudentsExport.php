@@ -6,17 +6,19 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 
 class StudentsExport implements FromCollection
 {
-    protected $id;
+    protected $studentId;
 
-    public function __construct($id = null){
-        $this->id = $id;
+    public function __construct($studentId = null)
+    {
+        $this->studentId = $studentId;
     }
 
     public function collection()
     {
-        if($this->id){
-            return Student::where('id',$this->id)->get();
+        if($this->studentId){
+            return Student::where('id', $this->studentId)->get();
         }
         return Student::all();
     }
 }
+

@@ -1,26 +1,34 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StudentController;
 
-// Login & Logout
-Route::get('/', function () { return view('login'); })->name('login.form');
-Route::post('/login', [StudentController::class,'login'])->name('login');
-Route::post('/logout', [StudentController::class,'logout'])->name('logout');
+// Login routes
+Route::get('/login', [AuthController::class,'showLoginForm'])->name('login.form');
+Route::post('/login', [AuthController::class,'login'])->name('login.submit');
+Route::post('/logout', [AuthController::class,'logout'])->name('logout');
 
-// Student resource routes
-Route::resource('students', StudentController::class)->except(['show']);
+// Protected routes
+Route::middleware('auth')->group(function(){
 
-// Upload / Delete files
-Route::post('/students/{student}/files', [StudentController::class,'uploadFiles'])
-    ->name('students.files.upload');
-Route::post('/students/delete-file', [StudentController::class,'deleteFile'])
-    ->name('students.files.delete');
+    Route::get('/students', [StudentController::class,'index'])->name('students.index');
+    Route::get('/students/create', [StudentController::class,'create'])->name('students.create');
+    Route::post('/students', [StudentController::class,'store'])->name('students.store');
 
-// PDF Routes
-Route::get('/students/pdf', [StudentController::class, 'exportPDF'])->name('students.pdf'); // all students
-Route::get('/students/pdf/{id}', [StudentController::class,'exportStudentPDF'])->name('students.student.pdf'); // single student
+    Route::get('/students/{student}/edit', [StudentController::class,'edit'])->name('students.edit');
+    Route::put('/students/{student}', [StudentController::class,'update'])->name('students.update');
 
-// Excel Routes
-Route::get('/students/excel', [StudentController::class,'exportExcel'])->name('students.excel'); // all students
-Route::get('/students/excel/{id}', [StudentController::class,'exportStudentExcel'])->name('students.student.excel'); // single student
+    Route::delete('/students/{student}/files/{file}', [StudentController::class,'deleteFile'])
+        ->where('file', '.*')
+        ->name('students.files.delete');
+
+    Route::delete('/students/{student}', [StudentController::class,'destroy'])->name('students.destroy');
+
+    Route::get('/students/pdf', [StudentController::class,'exportPdf'])->name('students.pdf');
+    Route::get('/students/excel', [StudentController::class,'exportExcel'])->name('students.excel');
+
+    Route::get('/students/{student}/pdf', [StudentController::class,'studentPdf'])->name('students.student.pdf');
+
+    
+});
