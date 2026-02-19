@@ -4,21 +4,21 @@ namespace App\Exports;
 use App\Models\Student;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class StudentsExport implements FromCollection
-{
-    protected $studentId;
 
-    public function __construct($studentId = null)
+   class StudentsExport implements FromCollection
+{
+    protected $students;
+
+    public function __construct($students = null)
     {
-        $this->studentId = $studentId;
+        $this->students = $students;
     }
 
     public function collection()
     {
-        if($this->studentId){
-            return Student::where('id', $this->studentId)->get();
-        }
-        return Student::all();
+        return $this->students ?? Student::all();
     }
 }
+
+
 

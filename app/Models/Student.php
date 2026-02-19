@@ -27,4 +27,8 @@ class Student extends Authenticatable
     protected $casts = [
         'files' => 'array',
     ];
+
+    
+
+    public $timestamps = false; 
 }

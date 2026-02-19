@@ -69,7 +69,8 @@ Update Student
 
     <span class="text-sm">{{ $file }}</span>
 
-<form action="{{ route('students.files.delete', [$student, urlencode($file)]) }}" method="POST" class="inline">
+<form action="{{ route('students.files.delete', [$student, urlencode($file)]) }}" method="POST">
+
 
     @csrf
     @method('DELETE')

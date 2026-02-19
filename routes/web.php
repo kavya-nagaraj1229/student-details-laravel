@@ -4,12 +4,17 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StudentController;
 
+Route::get('/', function () {
+    return redirect('/login');
+});
+
+
 // Login routes
 Route::get('/login', [AuthController::class,'showLoginForm'])->name('login.form');
 Route::post('/login', [AuthController::class,'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class,'logout'])->name('logout');
 
-// Protected routes
+
 Route::middleware('auth')->group(function(){
 
     Route::get('/students', [StudentController::class,'index'])->name('students.index');
@@ -19,16 +24,20 @@ Route::middleware('auth')->group(function(){
     Route::get('/students/{student}/edit', [StudentController::class,'edit'])->name('students.edit');
     Route::put('/students/{student}', [StudentController::class,'update'])->name('students.update');
 
-    Route::delete('/students/{student}/files/{file}', [StudentController::class,'deleteFile'])
-        ->where('file', '.*')
-        ->name('students.files.delete');
+    Route::delete('/students/{student}/files/{filename}', [StudentController::class, 'deleteFile'])
+     ->name('students.files.delete');
+
 
     Route::delete('/students/{student}', [StudentController::class,'destroy'])->name('students.destroy');
+   
+    
+    Route::get('/students/pdf', [StudentController::class,'downloadPdf'])->name('students.pdf');
+    Route::get('/students/excel', [StudentController::class,'downloadExcel'])->name('students.excel');
 
-    Route::get('/students/pdf', [StudentController::class,'exportPdf'])->name('students.pdf');
-    Route::get('/students/excel', [StudentController::class,'exportExcel'])->name('students.excel');
 
-    Route::get('/students/{student}/pdf', [StudentController::class,'studentPdf'])->name('students.student.pdf');
+Route::get('/my/pdf', [StudentController::class,'myPdf'])->name('students.my.pdf');
+Route::get('/my/excel', [StudentController::class,'myExcel'])->name('students.my.excel');
+
 
     
 });

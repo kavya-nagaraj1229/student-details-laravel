@@ -6,32 +6,26 @@ use Illuminate\Http\Request;
 use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-
+use App\Models\User;
 use Mpdf\Mpdf;
-use Mpdf\Output\Destination;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\StudentsExport;
 
 class StudentController extends Controller
 {
-    public function index()
-    {
-        $user = Auth::user();
+ public function index()
+{
+    $user = Auth::user();
 
-        if ($user->role == 'admin') {
-            $students = Student::get();
-            
-      
-          
-           
-        } else {
-            $students = Student::where('id', $user->id)->get();
-             
-        }
-     
-
-        return view('students.index', compact('students'));
+    if ($user->role == 'admin') {
+        $students = Student::all();
+    } else {
+        $students = Student::where('id', $user->student_id)->get();
     }
+
+    return view('students.index', compact('students'));
+}
+
 
     public function create()
     {
@@ -41,7 +35,6 @@ class StudentController extends Controller
     
 public function store(Request $request)
 {
-    // Validation
     $request->validate([
         'name'  => 'required|string|max:255',
         'email' => 'required|email|unique:students,email',
@@ -49,13 +42,7 @@ public function store(Request $request)
         'dob'   => 'required|date',
         'files.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf|max:2048'
     ]);
-
-    // Prepare data
     $data = $request->only(['name','email','age','dob']);
-    
-  
-
-    // Handle files if uploaded
     if ($request->hasFile('files')) {
         $uploaded = [];
         foreach ($request->file('files') as $file) {
@@ -66,8 +53,16 @@ public function store(Request $request)
         $data['files'] = json_encode($uploaded);
     }
 
-    // Create student
-    Student::create($data);
+     $student= Student::create($data);
+
+  
+    User::create([
+        'username' => $request->email,
+        'password' => Hash::make('student123'),
+        'role' => 'student',
+        'student_id'=> $student->id,
+    ]);
+  
 
     return redirect()->route('students.index')
                      ->with('success','Student added successfully!');
@@ -119,58 +114,76 @@ public function store(Request $request)
         return redirect()->route('students.index')->with('success', 'Student deleted successfully!');
     }
 
-    public function deleteFile(Student $student, $filename)
-    {
-        $user = Auth::user();
 
-        if ($user->role !== 'admin' && $user->email !== $student->email) {
-            abort(403, 'Unauthorized');
-        }
 
-        $files = $student->files ? json_decode($student->files, true) : [];
+  public function deleteFile(Student $student, $filename)
+{
+    $files = $student->files ? json_decode($student->files, true) : [];
+    $filename = urldecode($filename);
 
-        if (($key = array_search($filename, $files)) !== false) {
-            unset($files[$key]);
-            $path = public_path('uploads/images/'.$filename);
-            if (file_exists($path)) unlink($path);
-        }
-
+    if(($key = array_search($filename, $files)) !== false){
+        unset($files[$key]);
         $student->files = json_encode(array_values($files));
         $student->save();
+        $filePath = public_path('uploads/images/' . $filename);
+        if(file_exists($filePath)){
+            unlink($filePath);
+        }
 
-        return back()->with('success', 'File deleted successfully!');
+        return back();
     }
 
-    // Admin PDF
-    public function exportPdf()
-    {
-        $user = Auth::user();
-        if ($user->role !== 'admin') abort(403, 'Unauthorized');
+    return back()->with('error', 'File not found!');
+}
 
-        $students = Student::all();
-        $html = view('students.pdf', compact('students'))->render();
-        $mpdf = new Mpdf();
-        $mpdf->WriteHTML($html);
-        return $mpdf->Output('students.pdf', Destination::DOWNLOAD);
+
+public function downloadPdf()
+{
+    if(Auth::user()->role != 'admin'){
+        abort(403);
     }
 
-    // Single student PDF
-    public function studentPdf(Student $student)
-    {
-        $user = Auth::user();
-        if ($user->role === 'student' && $user->id !== $student->id) abort(403, 'Unauthorized');
+    $students = Student::all();
+    $mpdf = new Mpdf();
+    $html = view('students.pdf', compact('students'))->render();
+    $mpdf->WriteHTML($html);
+    return $mpdf->Output('students.pdf', 'D');
+}
 
-        $html = view('students.pdf', ['students'=>[$student]])->render();
-        $mpdf = new Mpdf();
-        $mpdf->WriteHTML($html);
-        return $mpdf->Output('student.pdf', Destination::DOWNLOAD);
+public function downloadExcel()
+{
+    if(Auth::user()->role != 'admin'){
+        abort(403);
     }
 
-    public function exportExcel()
-    {
-        $user = Auth::user();
-        if ($user->role !== 'admin') abort(403, 'Unauthorized');
+    return Excel::download(new StudentsExport, 'students.xlsx');
+}
 
-        return Excel::download(new StudentsExport, 'students.xlsx');
+
+public function myPdf()
+{
+    if(Auth::user()->role != 'student'){
+        abort(403);
     }
+
+    $students = Student::where('name', Auth::user()->username)->get();
+
+    $mpdf = new \Mpdf\Mpdf();
+    $html = view('students.pdf', compact('students'))->render();
+    $mpdf->WriteHTML($html);
+    return $mpdf->Output('my_details.pdf', 'D');
+}
+
+
+public function myExcel()
+{
+    if(Auth::user()->role != 'student'){
+        abort(403);
+    }
+
+    $student = Student::where('name', Auth::user()->username)->get();
+
+    return Excel::download(new StudentsExport($student), 'my_details.xlsx');
+}
+
 }

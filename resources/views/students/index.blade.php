@@ -19,17 +19,19 @@
 
 <div class="flex justify-between mb-6">
     <h2 class="text-2xl font-bold">Student List</h2>
-
-    <div class="space-x-2">
+<div class="space-x-2">
+    @if(Auth::user()->role == 'admin')
         <a href="{{ route('students.create') }}" 
            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">+ Add Student</a>
 
-        {{-- PDF Download --}}
         <a href="{{ route('students.pdf') }}" 
            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">Download PDF</a>
-           
 
-    </div>
+        <a href="{{ route('students.excel') }}" 
+           class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Download Excel</a>
+    @endif
+</div>
+
 </div>
 
 {{-- Success message --}}
@@ -46,72 +48,92 @@
             <th class="p-2 border">Age</th>
             <th class="p-2 border">DOB</th>
             <th class="p-2 border">Files</th>
-            <th class="p-2 border">Actions</th>
+            @if(Auth::user()->role == 'admin')
+           <th class="p-2 border">Actions</th>
+           @endif
+           @if(Auth::user()->role == 'student')
+           <th class="p-2 border">PDF & EXCEL</th>
+           @endif
 
-            @if(Auth::user()->role == 'student')
-            <th class="p-2 border">PDF</th>
-            <th class="p-2 border">Excel</th>
-            @endif
         </tr>
     </thead>
 
+
+
     <tbody>
-        @forelse($students as $student)
-        
-        <tr class="hover:bg-gray-50">
-            <td class="p-2 border">{{ $student->id }}</td>
-            <td class="p-2 border">{{ $student->name }}</td>
-            <td class="p-2 border">{{ $student->email }}</td>
-            <td class="p-2 border">{{ $student->age }}</td>
-            <td class="p-2 border">{{ $student->dob }}</td>
+    @forelse($students as $student)
+    <tr class="hover:bg-gray-50">
 
-            {{-- Files --}}
-            <td class="p-2 border text-sm">
-                    @if($student->files)
-        @foreach(json_decode($student->files) as $f)
-                        @php $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION)); @endphp
-                        <span onclick="viewFile('{{ asset('uploads/images/'.$f) }}','{{ in_array($ext,['jpg','jpeg','png','gif']) ? 'img' : 'pdf' }}')" 
-                              class="text-blue-600 cursor-pointer block hover:underline">
-                            {{ $f }}
-                        </span>
-                    @endforeach
-                @else
-                    <span class="text-gray-400">No files</span>
-                @endif
-            </td>
+        <td class="p-2 border text-center">{{ $student->id }}</td>
+        <td class="p-2 border">{{ $student->name }}</td>
+        <td class="p-2 border">{{ $student->email }}</td>
+        <td class="p-2 border text-center">{{ $student->age }}</td>
+        <td class="p-2 border text-center">{{ $student->dob }}</td>
 
-            {{-- Admin Actions --}}
-            <td class="p-2 border space-x-2">
-                <a href="{{ route('students.edit', $student) }}" 
-                   class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition">Edit</a>
+        {{-- Files --}}
+        <td class="p-2 border text-sm">
+            @if($student->files)
+                @foreach(json_decode($student->files) as $f)
+                    @php $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION)); @endphp
+                    <span onclick="viewFile('{{ asset('uploads/images/'.$f) }}',
+                        '{{ in_array($ext,['jpg','jpeg','png','gif']) ? 'img' : 'pdf' }}')"
+                        class="text-blue-600 cursor-pointer block hover:underline">
+                        {{ $f }}
+                    </span>
+                @endforeach
+            @else
+                <span class="text-gray-400">No files</span>
+            @endif
+        </td>
+
+        {{-- Student Actions --}}
+     @if(Auth::user()->role == 'student')
+<td class="p-2 border">
+    <div class="flex justify-center gap-2">
+        <a href="{{ route('students.my.pdf') }}"
+           class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition">
+           My PDF
+        </a>
+
+        <a href="{{ route('students.my.excel') }}"
+           class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition">
+           My Excel
+        </a>
+    </div>
+</td>
+@endif
+
+
+        {{-- Admin Actions --}}
+        @if(Auth::user()->role == 'admin')
+        <td class="p-2 border">
+            <div class="flex justify-center gap-2">
+                <a href="{{ route('students.edit', $student) }}"
+                   class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition">
+                   Edit
+                </a>
 
                 <form action="{{ route('students.destroy', $student) }}" method="POST" class="inline">
                     @csrf
                     @method('DELETE')
-                    <button class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition">Delete</button>
+                    <button class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition">
+                        Delete
+                    </button>
                 </form>
-            </td>
-         
+            </div>
+        </td>
+        @endif
 
-            {{-- Student PDF / Excel --}}
-            @if(Auth::user()->role =='student')
-            <td class="p-2 border text-center">
-                <a href="{{ route('students.pdf', $student->id) }}" 
-                   class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 transition">PDF</a>
-            </td>
-            <td class="p-2 border text-center">
-                <a href="{{ route('students.excel', $student->id) }}" 
-                   class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition">Excel</a>
-            </td>
-            @endif
-        </tr>
-        @empty
-        <tr>
-            <td colspan="9" class="text-center text-red-600 py-4">No students found</td>
-        </tr>
-        @endforelse
+    </tr>
+    @empty
+    <tr>
+        <td colspan="8" class="text-center text-red-600 py-4">No students found</td>
+    </tr>
+    @endforelse
     </tbody>
 </table>
+
+     
 
 {{-- Modal for Files --}}
 <div id="imgModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex justify-center items-center z-50">

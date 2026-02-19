@@ -12,8 +12,6 @@ class User extends Authenticatable
 
     protected $hidden = ['password'];
 
-    // remove mutator to avoid double bcrypt
-    // public function setPasswordAttribute($value){
-    //     $this->attributes['password'] = bcrypt($value);
-    // }
+
+    public $timestamps = false; 
 }
