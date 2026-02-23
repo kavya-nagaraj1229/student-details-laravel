@@ -39,100 +39,361 @@
     <div class="mb-4 p-3 bg-green-100 text-green-700 rounded">{{ session('success') }}</div>
 @endif
 
+
+@if(Auth::user()->role == 'admin')
+
 <table class="w-full border text-sm bg-white shadow rounded">
-    <thead class="bg-gray-200">
-        <tr>
-            <th class="p-2 border">ID</th>
-            <th class="p-2 border">Name</th>
-            <th class="p-2 border">Email</th>
-            <th class="p-2 border">Age</th>
-            <th class="p-2 border">DOB</th>
-            <th class="p-2 border">Files</th>
-            @if(Auth::user()->role == 'admin')
-           <th class="p-2 border">Actions</th>
-           @endif
-           @if(Auth::user()->role == 'student')
-           <th class="p-2 border">PDF & EXCEL</th>
-           @endif
+<thead class="bg-gray-200">
 
-        </tr>
-    </thead>
+<tr>
+<th class="p-2 border">ID</th>
+<th class="p-2 border">First Name</th>
+<th class="p-2 border">Last Name</th>
+<th class="p-2 border">Email</th>
+<th class="p-2 border">Age</th>
+<th class="p-2 border">DOB</th>
+<th class="p-2 border">Father</th>
+<th class="p-2 border">Mother</th>
+<th class="p-2 border">Gender</th>
+<th class="p-2 border">Marital</th>
+<th class="p-2 border">Blood</th>
+<th class="p-2 border">Education</th>
+<th class="p-2 border">Contact</th>
+<th class="p-2 border">Aadhar</th>
+<th class="p-2 border">PAN</th>
+<th class="p-2 border">License</th>
+<th class="p-2 border">PF</th>
+<th class="p-2 border">UAN</th>
+<th class="p-2 border">ESI</th>
+<th class="p-2 border">Contect Address</th>
+<th class="p-2 border">Pincode</th>
+<th class="p-2 border">Permanent Address</th>
+<th class="p-2 border">Pincode</th>
+<th class="p-2 border">Files</th>
+<th class="p-2 border">Actions</th>
+</tr>
 
+</thead>
 
+<tbody>
 
-    <tbody>
-    @forelse($students as $student)
-    <tr class="hover:bg-gray-50">
+@forelse($students as $student)
 
-        <td class="p-2 border text-center">{{ $student->id }}</td>
-        <td class="p-2 border">{{ $student->name }}</td>
-        <td class="p-2 border">{{ $student->email }}</td>
-        <td class="p-2 border text-center">{{ $student->age }}</td>
-        <td class="p-2 border text-center">{{ $student->dob }}</td>
+<tr class="hover:bg-gray-50">
 
-        {{-- Files --}}
-        <td class="p-2 border text-sm">
-            @if($student->files)
-                @foreach(json_decode($student->files) as $f)
-                    @php $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION)); @endphp
-                    <span onclick="viewFile('{{ asset('uploads/images/'.$f) }}',
-                        '{{ in_array($ext,['jpg','jpeg','png','gif']) ? 'img' : 'pdf' }}')"
-                        class="text-blue-600 cursor-pointer block hover:underline">
-                        {{ $f }}
-                    </span>
-                @endforeach
-            @else
-                <span class="text-gray-400">No files</span>
-            @endif
-        </td>
+<td class="p-2 border text-center">{{ $student->id }}</td>
 
-        {{-- Student Actions --}}
-     @if(Auth::user()->role == 'student')
-<td class="p-2 border">
-    <div class="flex justify-center gap-2">
-        <a href="{{ route('students.my.pdf') }}"
-           class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition">
-           My PDF
-        </a>
+<td class="p-2 border">{{ $student->name }}</td>
 
-        <a href="{{ route('students.my.excel') }}"
-           class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition">
-           My Excel
-        </a>
-    </div>
+<td class="p-2 border">{{ $student->lastname }}</td>
+
+<td class="p-2 border">{{ $student->email }}</td>
+
+<td class="p-2 border text-center">{{ $student->age }}</td>
+
+<td class="p-2 border text-center">{{ $student->dob }}</td>
+
+<td class="p-2 border">{{ $student->fathername }}</td>
+
+<td class="p-2 border">{{ $student->mothername }}</td>
+
+<td class="p-2 border">{{ $student->gender }}</td>
+
+<td class="p-2 border">{{ $student->maritalstatus }}</td>
+
+<td class="p-2 border">{{ $student->bloodgroup }}</td>
+
+<td class="p-2 border">{{ $student->education }}</td>
+
+<td class="p-2 border">{{ $student->contact_number }}</td>
+
+<td class="p-2 border">{{ $student->aadhar }}</td>
+
+<td class="p-2 border">{{ $student->pan }}</td>
+
+<td class="p-2 border">{{ $student->license }}</td>
+
+<td class="p-2 border">{{ $student->pf_number }}</td>
+
+<td class="p-2 border">{{ $student->uan_number }}</td>
+
+<td class="p-2 border">{{ $student->esi_number }}</td>
+
+<td class="p-2 border">{{ $student->contact_address }}</td>
+
+<td class="p-2 border">{{ $student->contact_pincode }}</td>
+
+<td class="p-2 border">{{ $student->permanent_address }}</td>
+
+<td class="p-2 border">{{ $student->permanent_pincode }}</td>
+
+<td class="p-2 border text-sm">
+
+@if($student->files)
+
+@foreach(json_decode($student->files) as $f)
+
+@php $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION)); @endphp
+
+<span onclick="viewFile('{{ asset('uploads/images/'.$f) }}',
+'{{ in_array($ext,['jpg','jpeg','png','gif']) ? 'img' : 'pdf' }}')"
+class="text-blue-600 cursor-pointer block hover:underline">
+
+{{ $f }}
+
+</span>
+
+@endforeach
+
+@else
+
+<span class="text-gray-400">No files</span>
+
+@endif
+
 </td>
+
+<td class="p-2 border">
+
+<div class="flex justify-center gap-2">
+    <a href="{{ route('students.show', $student) }}"
+class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">
+View
+</a>
+
+<a href="{{ route('students.edit', $student) }}"
+class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600">
+
+Edit
+
+</a>
+
+<form action="{{ route('students.destroy', $student) }}" method="POST">
+
+@csrf
+@method('DELETE')
+
+<button class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">
+
+Delete
+
+</button>
+
+</form>
+
+</div>
+
+</td>
+
+</tr>
+
+@empty
+
+<tr>
+
+<td colspan="22" class="text-center text-red-600 py-4">
+
+No students found
+
+</td>
+
+</tr>
+
+@endforelse
+
+</tbody>
+
+</table>
+
 @endif
 
 
-        {{-- Admin Actions --}}
-        @if(Auth::user()->role == 'admin')
-        <td class="p-2 border">
-            <div class="flex justify-center gap-2">
-                <a href="{{ route('students.edit', $student) }}"
-                   class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition">
-                   Edit
-                </a>
 
-                <form action="{{ route('students.destroy', $student) }}" method="POST" class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <button class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition">
-                        Delete
-                    </button>
-                </form>
-            </div>
-        </td>
-        @endif
+@if(Auth::user()->role == 'student')
 
-    </tr>
-    @empty
-    <tr>
-        <td colspan="8" class="text-center text-red-600 py-4">No students found</td>
-    </tr>
-    @endforelse
-    </tbody>
-</table>
+@forelse($students as $student)
 
+<div class="max-w-2xl mx-auto bg-white shadow rounded p-6 mb-4">
+
+<div class="grid grid-cols-2 gap-4">
+
+<div>
+<label class="font-semibold">ID</label>
+<p class="border p-2 rounded">{{ $student->id }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Name</label>
+<p class="border p-2 rounded">{{ $student->name }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Email</label>
+<p class="border p-2 rounded">{{ $student->email }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Age</label>
+<p class="border p-2 rounded">{{ $student->age }}</p>
+</div>
+
+<div>
+<label class="font-semibold">DOB</label>
+<p class="border p-2 rounded">{{ $student->dob }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Files</label>
+
+@if($student->files)
+    @foreach(json_decode($student->files) as $f)
+        @php $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION)); @endphp
+
+        <div onclick="viewFile('{{ asset('uploads/images/'.$f) }}',
+        '{{ in_array($ext,['jpg','jpeg','png','gif']) ? 'img' : 'pdf' }}')"
+        class="text-blue-600 cursor-pointer hover:underline">
+
+        {{ $f }}
+
+        </div>
+
+
+    @endforeach
+@else
+<span class="text-gray-400">No files</span>
+@endif
+
+</div>
+<div>
+<label class="font-semibold">Last Name</label>
+<p class="border p-2 rounded">{{ $student->lastname }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Father Name</label>
+<p class="border p-2 rounded">{{ $student->fathername }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Mother Name</label>
+<p class="border p-2 rounded">{{ $student->mothername }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Gender</label>
+<p class="border p-2 rounded">{{ $student->gender }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Marital Status</label>
+<p class="border p-2 rounded">{{ $student->maritalstatus }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Spouse</label>
+<p class="border p-2 rounded">{{ $student->spouse }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Blood Group</label>
+<p class="border p-2 rounded">{{ $student->bloodgroup }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Education</label>
+<p class="border p-2 rounded">{{ $student->education }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Contact Number</label>
+<p class="border p-2 rounded">{{ $student->contact_number }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Aadhar</label>
+<p class="border p-2 rounded">{{ $student->aadhar }}</p>
+</div>
+
+<div>
+<label class="font-semibold">PAN</label>
+<p class="border p-2 rounded">{{ $student->pan }}</p>
+</div>
+
+<div>
+<label class="font-semibold">License</label>
+<p class="border p-2 rounded">{{ $student->license }}</p>
+</div>
+
+<div>
+<label class="font-semibold">PF Number</label>
+<p class="border p-2 rounded">{{ $student->pf_number }}</p>
+</div>
+
+<div>
+<label class="font-semibold">UAN Number</label>
+<p class="border p-2 rounded">{{ $student->uan_number }}</p>
+</div>
+
+<div>
+<label class="font-semibold">ESI Number</label>
+<p class="border p-2 rounded">{{ $student->esi_number }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Contact Address</label>
+<p class="border p-2 rounded">{{ $student->contact_address }}</p>
+</div>
+
+<div>
+<label class="font-semibold" id="contact_pincode">Pincode</label>
+<p class="border p-2 rounded">{{ $student->contact_pincode }}</p>
+</div>
+
+<div>
+<label class="font-semibold">Permanent Address</label>
+<p class="border p-2 rounded">{{ $student->permanent_address }}</p>
+</div>
+
+<div>
+<label class="font-semibold"id="permanent_pincode">Pincode</label>
+<p class="border p-2 rounded">{{ $student->permanent_pincode }}</p>
+</div>
+
+
+</div>
+
+
+<div class="flex gap-3 mt-4">
+<div class="flex justify-center gap-2">
+    <a href="{{ route('students.show', $student) }}"
+class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">
+View
+</a>
+
+<a href="{{ route('students.edit', $student) }}"
+class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
+Edit
+</a>
+
+<a href="{{ route('students.my.pdf') }}"
+class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+My PDF
+</a>
+
+<a href="{{ route('students.my.excel') }}"
+class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+My Excel
+</a>
+
+</div>
+
+</div>
+
+@empty
+<p class="text-center text-red-600">No students found</p>
+@endforelse
+
+@endif
      
 
 {{-- Modal for Files --}}

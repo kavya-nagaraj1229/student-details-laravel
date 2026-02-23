@@ -9,15 +9,36 @@ class Student extends Authenticatable
 {
     use Notifiable;
 
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'age',
-        'dob',
-        'role',
-        'files'
-    ];
+     protected $table = 'students'; 
+
+protected $fillable = [
+'name',
+'lastname',
+'fathername',
+'mothername',
+'gender',
+'maritalstatus',
+'spouse',
+'bloodgroup',
+'education',
+'contact_number',
+'aadhar',
+'pan',
+'license',
+'pf_number',
+'uan_number',
+'esi_number',
+'contact_address',
+'contact_pincode',
+'permanent_address',
+'permanent_pincode',
+'email',
+'password',
+'age',
+'dob',
+'role',
+'files'
+];
 
     protected $hidden = [
         'password',

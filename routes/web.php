@@ -35,8 +35,12 @@ Route::middleware('auth')->group(function(){
     Route::get('/students/excel', [StudentController::class,'downloadExcel'])->name('students.excel');
 
 
+
 Route::get('/my/pdf', [StudentController::class,'myPdf'])->name('students.my.pdf');
 Route::get('/my/excel', [StudentController::class,'myExcel'])->name('students.my.excel');
+
+// Show student personal details
+Route::get('students/{student}', [App\Http\Controllers\StudentController::class, 'show'])->name('students.show');
 
 
     
