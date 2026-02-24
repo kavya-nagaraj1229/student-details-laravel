@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Mpdf\Mpdf;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\StudentsImport;
 use App\Exports\StudentsExportBlade;
 
 class StudentController extends Controller
@@ -149,7 +150,7 @@ class StudentController extends Controller
         ]);
 
         $data = $request->only([
-             'name',
+            'name',
             'lastname',
             'fathername',
             'mothername',
@@ -199,7 +200,7 @@ class StudentController extends Controller
     }
 
 
-    
+
     public function destroy(Student $student)
     {
         if ($student->files) {
@@ -236,6 +237,7 @@ class StudentController extends Controller
     }
 
 
+
     public function downloadPdf()
     {
         if (Auth::user()->role != 'admin') {
@@ -243,12 +245,24 @@ class StudentController extends Controller
         }
 
         $students = Student::all();
-        $mpdf = new Mpdf();
+
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'orientation'=> 'L',
+            'margin_left' => 15,
+            'margin_right' => 15,
+            'margin_top' => 20,
+            'margin_bottom' => 20
+        ]);
+
+
         $html = view('students.pdf', compact('students'))->render();
+
         $mpdf->WriteHTML($html);
+
         return $mpdf->Output('students.pdf', 'D');
     }
-
 
     public function myPdf()
     {
@@ -258,7 +272,7 @@ class StudentController extends Controller
 
         $students = Student::where('name', Auth::user()->username)->get();
 
-        $mpdf = new \Mpdf\Mpdf();
+        $mpdf = new Mpdf();
         $html = view('students.pdf', compact('students'))->render();
         $mpdf->WriteHTML($html);
         return $mpdf->Output('my_details.pdf', 'D');
@@ -288,4 +302,6 @@ class StudentController extends Controller
         $student = Student::findOrFail($id);
         return view('students.show', compact('student'));
     }
+
+
 }

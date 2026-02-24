@@ -1,11 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-<style>
-table { width:100%; border-collapse: collapse; font-size:13px; }
-th, td { border:1px solid #000; padding:6px; text-align:left; }
-th { background:#f2f2f2; }
-</style>
+
+    <style>
+    body{
+        font-family: Tahoma;
+        font-size:13px;
+        color:#333;
+    }
+
+    h2{
+        text-align:center;
+        font-weight:bold;
+        color:#000;
+        margin-bottom:20px;
+    }
+
+    table{
+        width:100%;
+        border-collapse:collapse;
+        font-size:12px;
+    }
+
+    th{
+        border:1px solid #000;
+        padding:8px;
+        background: #444;;
+        color:white;
+        font-weight:bold;
+        text-align:left;
+    }
+
+    td{
+        border:1px solid #000;
+        padding:6px;
+        color:#000;
+    }
+
+    </style>
+ 
 </head>
 
 <body>

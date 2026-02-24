@@ -18,6 +18,7 @@
         </button>
     </form>
 
+
     <div class="flex justify-between mb-6">
         @if (Auth::user()->role == 'admin')
             <h2 class="text-2xl font-bold">Admin - Student List</h2>
@@ -34,6 +35,7 @@
 
                 <a href="{{ route('students.excel') }}"
                     class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Download Excel</a>
+                    
             @endif
         </div>
 
@@ -390,7 +392,6 @@
     @endif
 
 
-    {{-- Modal for Files --}}
     <div id="imgModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex justify-center items-center z-50">
         <div class="bg-white p-4 rounded relative">
             <button onclick="closeImg()" class="absolute top-2 right-2 text-red-600 font-bold text-3xl">X</button>
