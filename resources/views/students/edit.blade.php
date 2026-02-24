@@ -128,30 +128,36 @@ class="grid grid-cols-2 gap-4">
 <input type="text" name="esi_number" value="{{ $student->esi_number }}" class="w-full border p-2 rounded">
 </div>
 
-<div class="col-span-2">
-<label class="font-bold">Contact Address</label>
-<textarea name="contact_address" class="w-full border p-2 rounded">{{ $student->contact_address }}</textarea>
-</div>
-
 <div>
-<label class="font-bold">Pincode</label>
-<input type="text" name="contact_pincode" value="{{ $student->contact_pincode }}" class="w-full border p-2 rounded">
-</div>
-
-<div class="col-span-2">
-<label class="font-bold">Permanent Address</label>
-<textarea name="permanent_address" class="w-full border p-2 rounded">{{ $student->permanent_address }}</textarea>
-</div>
-
-<div>
-<label class="font-bold">Pincode</label>
-<input type="text" name="permanent_pincode" value="{{ $student->permanent_pincode }}" class="w-full border p-2 rounded">
-</div>
-
-<div class="col-span-2">
 <label class="font-bold">Upload Files</label>
 <input type="file" name="files[]" multiple class="w-full border p-2 rounded">
 </div>
+
+<div>
+<label class="block text-sm font-medium">Contact Address</label>
+<textarea name="contact_address" id="contact_address" class="w-full border rounded px-3 py-2">{{ $student->contact_address}}</textarea>
+<label>
+<input type="checkbox" id="same_address" onclick="copyAddress()"> Same as Contact Address
+</label>
+</div>
+
+<div>
+<label class="block text-sm font-medium">Pincode</label>
+<input type="text" name="contact_pincode" id="contact_pincode" class="w-full border rounded px-3 py-2"value="{{ $student->contact_pincode}}">
+</div>
+
+
+<div class="mt-3">
+<label class="block text-sm font-medium">Permanent Address</label>
+<textarea name="permanent_address" id="permanent_address" class="w-full border rounded px-3 py-2">{{ $student->permanent_address}}</textarea>
+</div>
+
+<div>
+<label class="block text-sm font-medium">Pincode</label>
+<input type="text" name="permanent_pincode" id="permanent_pincode" class="w-full border rounded px-3 py-2" value="{{ $student->permanent_pincode}}">
+</div>
+
+
 
 <div class="col-span-2">
 <button class="w-full bg-green-600 text-white py-2 rounded">
@@ -229,6 +235,30 @@ function closeModal(){
     modal.classList.add('hidden');
     document.getElementById('modalImg').src = '';
     document.getElementById('modalPdf').src = '';
+}
+</script>
+
+
+<script>
+function copyAddress() {
+
+let checkbox = document.getElementById("same_address");
+
+if(checkbox.checked){
+
+document.getElementById("permanent_address").value =
+document.getElementById("contact_address").value;
+
+document.getElementById("permanent_pincode").value =
+document.getElementById("contact_pincode").value;
+
+}else{
+
+document.getElementById("permanent_address").value = "";
+document.getElementById("permanent_pincode").value = "";
+
+}
+
 }
 </script>
 

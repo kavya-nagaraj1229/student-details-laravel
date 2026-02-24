@@ -164,6 +164,11 @@ enctype="multipart/form-data">
 </div>
 
 <div>
+<label class="block text-sm font-medium">Upload Files</label>
+<input type="file" name="files[]" multiple class="w-full border rounded px-3 py-2">
+</div>
+
+<div>
 <label class="block text-sm font-medium">Contact Address</label>
 <textarea name="contact_address" id="contact_address" class="w-full border rounded px-3 py-2"></textarea>
 <label>
@@ -187,10 +192,7 @@ enctype="multipart/form-data">
 <input type="text" name="permanent_pincode" id="permanent_pincode" class="w-full border rounded px-3 py-2">
 </div>
 
-<div class="col-span-2">
-<label class="block text-sm font-medium">Upload Files</label>
-<input type="file" name="files[]" multiple class="w-full border rounded px-3 py-2">
-</div>
+
 
 </div>
 
@@ -224,6 +226,8 @@ reader.readAsDataURL(event.target.files[0]);
 }
 
 </script>
+
+
 <script>
 function copyAddress() {
 

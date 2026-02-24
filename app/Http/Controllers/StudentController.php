@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Mpdf\Mpdf;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\StudentsExport;
+use App\Exports\StudentsExportBlade;
 
 class StudentController extends Controller
 {
@@ -149,17 +149,22 @@ class StudentController extends Controller
         ]);
 
         $data = $request->only([
-            'name',
+             'name',
             'lastname',
             'fathername',
             'mothername',
             'gender',
             'maritalstatus',
+            'spouse',
             'bloodgroup',
             'education',
             'contact_number',
             'aadhar',
             'pan',
+            'license',
+            'pf_number',
+            'uan_number',
+            'esi_number',
             'contact_address',
             'contact_pincode',
             'permanent_address',
@@ -193,6 +198,8 @@ class StudentController extends Controller
             ->with('success', 'Student updated successfully!');
     }
 
+
+    
     public function destroy(Student $student)
     {
         if ($student->files) {
@@ -242,15 +249,6 @@ class StudentController extends Controller
         return $mpdf->Output('students.pdf', 'D');
     }
 
-    public function downloadExcel()
-    {
-        if (Auth::user()->role != 'admin') {
-            abort(403);
-        }
-
-        return Excel::download(new StudentsExport, 'students.xlsx');
-    }
-
 
     public function myPdf()
     {
@@ -266,6 +264,14 @@ class StudentController extends Controller
         return $mpdf->Output('my_details.pdf', 'D');
     }
 
+    public function downloadExcel()
+    {
+        if (Auth::user()->role != 'admin') {
+            abort(403);
+        }
+
+        return Excel::download(new StudentsExportBlade, 'students.xlsx');
+    }
 
     public function myExcel()
     {
@@ -274,13 +280,12 @@ class StudentController extends Controller
         }
 
         $student = Student::where('name', Auth::user()->username)->get();
-
-        return Excel::download(new StudentsExport($student), 'my_details.xlsx');
+        return Excel::download(new StudentsExportBlade($student), 'my_details.xlsx');
     }
 
     public function show($id)
-{
-    $student = Student::findOrFail($id);
-    return view('students.show', compact('student'));
-}
+    {
+        $student = Student::findOrFail($id);
+        return view('students.show', compact('student'));
+    }
 }

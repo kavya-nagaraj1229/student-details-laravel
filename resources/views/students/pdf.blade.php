@@ -36,7 +36,10 @@ th { background:#f2f2f2; }
 <th>PF</th>
 <th>UAN</th>
 <th>ESI</th>
-<th>Pincode</th>
+<th>Contact Address</th>
+<th>Contact Pincode</th>
+<th>Permanent Address</th>
+<th>Permanent Pincode</th>
 <th>Files</th>
 
 </tr>
@@ -67,7 +70,10 @@ th { background:#f2f2f2; }
 <td>{{ $s->pf_number }}</td>
 <td>{{ $s->uan_number }}</td>
 <td>{{ $s->esi_number }}</td>
-<td>{{ $s->pincode }}</td>
+<td>{{ $s->contact_address}}</td>
+<td>{{ $s->contact_pincode }}</td>
+<td>{{ $s->permanent_address}}</td>
+<td>{{ $s->permanent_pincode}}</td>
 
 <td>
 
