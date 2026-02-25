@@ -35,9 +35,27 @@
 
                 <a href="{{ route('students.excel') }}"
                     class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Download Excel</a>
-                    
             @endif
         </div>
+
+        <div class="mb-6">
+            <h2 class="text-xl font-bold mb-2">Upload Excel</h2>
+
+            <form action="{{ route('students.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="file" name="file" required class="border p-2 rounded">
+                <button type="submit"
+                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Upload</button>
+            </form>
+
+            @if (session('success'))
+                <div class="mt-2 p-2 bg-green-100 text-green-700 rounded">
+                    {{ session('success') }}
+                </div>
+            @endif
+        </div>
+
+
 
     </div>
 
@@ -96,7 +114,9 @@
 
                         <td class="p-2 border text-center">{{ $student->age }}</td>
 
-                        <td class="p-2 border text-center">{{ $student->dob }}</td>
+                        <td class="p-2 border text-center">
+                            {{ \Carbon\Carbon::parse($student->dob)->format('d-m-Y') }}
+                        </td>
 
                         <td class="p-2 border">{{ $student->fathername }}</td>
 

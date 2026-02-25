@@ -40,4 +40,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/my/excel', [StudentController::class, 'myExcel'])->name('students.my.excel');
 
     Route::get('students/{student}', [StudentController::class, 'show'])->name('students.show');
+Route::get('/import-students', [StudentController::class, 'importForm']);
+Route::post('/import-students', [StudentController::class, 'import'])->name('students.import');
 });

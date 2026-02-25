@@ -9,9 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Mpdf\Mpdf;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\StudentsImport;
+use App\Imports\StudentsImport; 
 use App\Exports\StudentsExportBlade;
-
 class StudentController extends Controller
 {
     public function index()
@@ -303,5 +302,21 @@ class StudentController extends Controller
         return view('students.show', compact('student'));
     }
 
+public function importForm()
+{
+    return view('import-students'); 
+}
+
+
+public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|mimes:xlsx,csv'
+    ]);
+
+    Excel::import(new StudentsImport, $request->file('file'));
+
+    return redirect()->back();
+}
 
 }
