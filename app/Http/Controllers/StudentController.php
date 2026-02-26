@@ -302,11 +302,6 @@ class StudentController extends Controller
         return view('students.show', compact('student'));
     }
 
-public function importForm()
-{
-    return view('import-students'); 
-}
-
 
 public function import(Request $request)
 {
@@ -316,7 +311,70 @@ public function import(Request $request)
 
     Excel::import(new StudentsImport, $request->file('file'));
 
-    return redirect()->back();
+    $students = Student::whereNotNull('marks')->get();
+
+    foreach ($students as $student) {
+
+        $marks = json_decode($student->marks, true);
+
+        if(!$marks || !is_array($marks)) {
+            continue;
+        }
+
+        $total = array_sum($marks);
+        $average = $total / count($marks);
+
+        $student->total = $total;
+        $student->average = $average;
+        $student->save();
+    }
+
+    return redirect()->back()->with('success','Students Imported Successfully');
 }
+
+public function marksForm($id)
+{
+    
+    $student = Student::findOrFail($id);
+
+    return view('students.marks',compact('student'));
+}
+
+
+public function storeMarks(Request $request,$id)
+{
+
+    $student = Student::findOrFail($id);
+
+    $marks = [
+
+        'tamil' => $request->tamil,
+        'english' => $request->english,
+        'maths' => $request->maths,
+        'science' => $request->science,
+        'social' => $request->social
+
+    ];
+
+    $total =
+    $request->tamil +
+    $request->english +
+    $request->maths +
+    $request->science +
+    $request->social;
+
+    $average = $total / 5;
+
+    $student->marks = json_encode($marks);
+    $student->total = $total;
+    $student->average = $average;
+
+    $student->save();
+
+    return redirect()->route('students.index')->with('success','Marks Saved Successfully');
+
+}
+
+
 
 }

@@ -9,6 +9,7 @@ return new class extends Migration
    public function up()
 {
     Schema::create('students', function (Blueprint $table) {
+
         $table->id(); 
         $table->string('name'); 
         $table->string('lastname')->nullable();
@@ -32,14 +33,20 @@ return new class extends Migration
         $table->text('contact_address')->nullable();
         $table->string('contact_pincode')->nullable();
         $table->text('permanent_address')->nullable();
-         $table->string('permanent_pincode')->nullable();
+        $table->string('permanent_pincode')->nullable();
         $table->text('files')->nullable();
 
+        // Marks system
+        $table->json('marks')->nullable();
+        $table->integer('total')->nullable();
+        $table->float('average')->nullable();
+
+        $table->timestamps();
 
     });
 }
 
-  public function down()
+public function down()
 {
     Schema::dropIfExists('students');
 }

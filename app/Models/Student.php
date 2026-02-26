@@ -37,7 +37,10 @@ protected $fillable = [
 'age',
 'dob',
 'role',
-'files'
+'files',
+'marks',
+'total',
+'average'
 ];
 
     protected $hidden = [

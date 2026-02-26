@@ -7,23 +7,42 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Concerns\WithValidation;
 
-class StudentsImport implements ToModel, WithHeadingRow
-{
+class StudentsImport implements 
+    ToModel,
+    WithHeadingRow
+    {
+
     public function model(array $row)
     {
+
         $dob = null;
         $age = null;
 
         if (!empty($row['dob'])) {
-            $dob = Date::excelToDateTimeObject($row['dob'])->format('Y-m-d');
-            $age = Carbon::parse($dob)->age;
+
+            if (is_numeric($row['dob'])) {
+                $dob = Date::excelToDateTimeObject($row['dob'])->format('Y-m-d');
+            } else {
+                $dob = Carbon::parse($row['dob'])->format('Y-m-d');
+            }
+
+            $age = Carbon::parse($dob)->diffInYears(Carbon::now());
         }
 
         $files = null;
-        if(!empty($row['files'])){
+        if (!empty($row['files'])) {
             $files = json_encode(explode(',', $row['files']));
         }
+
+        $marks = [
+            'tamil' => $row['tamil'] ?? 0,
+            'english' => $row['english'] ?? 0,
+            'maths' => $row['maths'] ?? 0,
+            'science' => $row['science'] ?? 0,
+            'social' => $row['social'] ?? 0,
+        ];
 
         return new Student([
 
@@ -31,8 +50,8 @@ class StudentsImport implements ToModel, WithHeadingRow
             'lastname' => $row['lastname'] ?? null,
             'email' => $row['email'] ?? null,
 
-            'age' => $age,
             'dob' => $dob,
+            'age' => $age,
 
             'fathername' => $row['fathername'] ?? null,
             'mothername' => $row['mothername'] ?? null,
@@ -59,7 +78,9 @@ class StudentsImport implements ToModel, WithHeadingRow
             'permanent_address' => $row['permanent_address'] ?? null,
             'permanent_pincode' => $row['permanent_pincode'] ?? null,
 
-            'files' => $files
+            'files' => $files,
+            'marks' => json_encode($marks)
         ]);
     }
+
 }

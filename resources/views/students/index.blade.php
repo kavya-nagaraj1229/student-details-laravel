@@ -95,6 +95,13 @@
                     <th class="p-2 border">Pincode</th>
                     <th class="p-2 border">Files</th>
                     <th class="p-2 border">Actions</th>
+                    <th class="p-2 border">Tamil</th>
+                    <th class="p-2 border">English</th>
+                    <th class="p-2 border">Maths</th>
+                    <th class="p-2 border">Science</th>
+                    <th class="p-2 border">Social</th>
+                    <th class="p-2 border">Total</th>
+                    <th class="p-2 border">Average</th>
                 </tr>
 
             </thead>
@@ -188,6 +195,13 @@
 
                                 </a>
 
+                                <a href="{{ route('students.marks', $student->id) }}"
+                                    class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">
+
+                                    Marks
+
+                                </a>
+
                                 <form action="{{ route('students.destroy', $student) }}" method="POST">
 
                                     @csrf
@@ -203,7 +217,21 @@
 
                             </div>
 
+
                         </td>
+
+                        @php
+                            $marks = json_decode($student->marks, true);
+                        @endphp
+
+                        <td class="p-2 border">{{ $marks['tamil'] ?? '-' }}</td>
+                        <td class="p-2 border">{{ $marks['english'] ?? '-' }}</td>
+                        <td class="p-2 border">{{ $marks['maths'] ?? '-' }}</td>
+                        <td class="p-2 border">{{ $marks['science'] ?? '-' }}</td>
+                        <td class="p-2 border">{{ $marks['social'] ?? '-' }}</td>
+
+                        <td class="p-2 border">{{ $student->total ?? '-' }}</td>
+                        <td class="p-2 border">{{ $student->average ?? '-' }}</td>
 
                     </tr>
 
@@ -216,6 +244,7 @@
                             No students found
 
                         </td>
+
 
                     </tr>
                 @endforelse
@@ -373,6 +402,45 @@
                     <div>
                         <label class="font-semibold"id="permanent_pincode">Pincode</label>
                         <p class="border p-2 rounded">{{ $student->permanent_pincode }}</p>
+                    </div>
+
+                    @php
+                        $marks = json_decode($student->marks, true);
+                    @endphp
+
+                    <div>
+                        <label class="font-semibold">Tamil</label>
+                        <p class="border p-2 rounded">{{ $marks['tamil'] ?? '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="font-semibold">English</label>
+                        <p class="border p-2 rounded">{{ $marks['english'] ?? '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="font-semibold">Maths</label>
+                        <p class="border p-2 rounded">{{ $marks['maths'] ?? '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="font-semibold">Science</label>
+                        <p class="border p-2 rounded">{{ $marks['science'] ?? '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="font-semibold">Social</label>
+                        <p class="border p-2 rounded">{{ $marks['social'] ?? '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="font-semibold">Total</label>
+                        <p class="border p-2 rounded">{{ $student->total ?? '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="font-semibold">Average</label>
+                        <p class="border p-2 rounded">{{ $student->average ?? '-' }}</p>
                     </div>
 
 
