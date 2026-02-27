@@ -9,8 +9,9 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Mpdf\Mpdf;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\StudentsImport; 
+use App\Imports\StudentsImport;
 use App\Exports\StudentsExportBlade;
+
 class StudentController extends Controller
 {
     public function index()
@@ -248,7 +249,7 @@ class StudentController extends Controller
         $mpdf = new Mpdf([
             'mode' => 'utf-8',
             'format' => 'A4',
-            'orientation'=> 'L',
+            'orientation' => 'L',
             'margin_left' => 15,
             'margin_right' => 15,
             'margin_top' => 20,
@@ -302,79 +303,103 @@ class StudentController extends Controller
         return view('students.show', compact('student'));
     }
 
-
 public function import(Request $request)
 {
     $request->validate([
         'file' => 'required|mimes:xlsx,csv'
     ]);
 
-    Excel::import(new StudentsImport, $request->file('file'));
+    $import = new StudentsImport();
+    $data = Excel::toArray($import, $request->file('file'));
+    $totalRows = count($data[0]);
+    $beforeCount = Student::count();
+    Excel::import($import, $request->file('file'));
+    $afterCount = Student::count();
+    $importedRows = $afterCount - $beforeCount;
 
-    $students = Student::whereNotNull('marks')->get();
+    $failures = $import->failures();
+    $skippedRows = count($failures);
+
+    $skippedNames = [];
+
+    foreach ($failures as $failure) {
+
+        $row = $failure->values();
+
+        if(isset($row['name'])){
+            $skippedNames[] = $row['name'];
+        }
+    }
+
+    $students = Student::orderBy('id','desc')->take($importedRows)->get();
+
+    $names = [];
 
     foreach ($students as $student) {
 
+        $names[] = $student->name;
+
         $marks = json_decode($student->marks, true);
 
-        if(!$marks || !is_array($marks)) {
-            continue;
+        if($marks && is_array($marks)){
+
+            $total = array_sum($marks);
+            $average = $total / count($marks);
+
+            $student->total = $total;
+            $student->average = $average;
+            $student->save();
         }
-
-        $total = array_sum($marks);
-        $average = $total / count($marks);
-
-        $student->total = $total;
-        $student->average = $average;
-        $student->save();
     }
 
-    return redirect()->back()->with('success','Students Imported Successfully');
+    $namesList = implode(', ', $names);
+    $skippedList = implode(', ', $skippedNames);
+
+    return redirect()->back()->with(
+        'success',
+        "Excel Total Rows: $totalRows | Imported: $importedRows | Skipped: $skippedRows | Imported Students: $namesList | Skipped Students: $skippedList"
+    );
 }
 
-public function marksForm($id)
-{
-    
-    $student = Student::findOrFail($id);
+    public function marksForm($id)
+    {
 
-    return view('students.marks',compact('student'));
-}
+        $student = Student::findOrFail($id);
 
-
-public function storeMarks(Request $request,$id)
-{
-
-    $student = Student::findOrFail($id);
-
-    $marks = [
-
-        'tamil' => $request->tamil,
-        'english' => $request->english,
-        'maths' => $request->maths,
-        'science' => $request->science,
-        'social' => $request->social
-
-    ];
-
-    $total =
-    $request->tamil +
-    $request->english +
-    $request->maths +
-    $request->science +
-    $request->social;
-
-    $average = $total / 5;
-
-    $student->marks = json_encode($marks);
-    $student->total = $total;
-    $student->average = $average;
-
-    $student->save();
-
-    return redirect()->route('students.index')->with('success','Marks Saved Successfully');
-
-}
+        return view('students.marks', compact('student'));
+    }
 
 
+    public function storeMarks(Request $request, $id)
+    {
 
+        $student = Student::findOrFail($id);
+
+        $marks = [
+
+            'tamil' => $request->tamil,
+            'english' => $request->english,
+            'maths' => $request->maths,
+            'science' => $request->science,
+            'social' => $request->social
+
+        ];
+
+        $total =
+            $request->tamil +
+            $request->english +
+            $request->maths +
+            $request->science +
+            $request->social;
+
+        $average = $total / 5;
+
+        $student->marks = json_encode($marks);
+        $student->total = $total;
+        $student->average = $average;
+
+        $student->save();
+
+        return redirect()->route('students.index')->with('success', 'Marks Saved Successfully');
+    }
 }

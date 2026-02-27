@@ -47,12 +47,6 @@
                 <button type="submit"
                     class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Upload</button>
             </form>
-
-            @if (session('success'))
-                <div class="mt-2 p-2 bg-green-100 text-green-700 rounded">
-                    {{ session('success') }}
-                </div>
-            @endif
         </div>
 
 

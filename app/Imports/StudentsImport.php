@@ -8,11 +8,18 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
+use Maatwebsite\Excel\Concerns\SkipsFailures;
 
 class StudentsImport implements 
     ToModel,
-    WithHeadingRow
-    {
+    WithHeadingRow,
+    WithValidation,
+    SkipsOnFailure
+{
+    use SkipsFailures;
+
+    public static $skippedNames = [];
 
     public function model(array $row)
     {
@@ -82,5 +89,15 @@ class StudentsImport implements
             'marks' => json_encode($marks)
         ]);
     }
+
+    public function rules(): array
+    {
+        return [
+
+            '*.email' => 'unique:students,email',
+
+        ];
+    }
+
 
 }
