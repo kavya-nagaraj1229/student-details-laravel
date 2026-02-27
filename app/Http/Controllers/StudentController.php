@@ -11,6 +11,7 @@ use Mpdf\Mpdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentsImport;
 use App\Exports\StudentsExportBlade;
+use App\Models\Marktable; 
 
 class StudentController extends Controller
 {
@@ -303,63 +304,63 @@ class StudentController extends Controller
         return view('students.show', compact('student'));
     }
 
-public function import(Request $request)
-{
-    $request->validate([
-        'file' => 'required|mimes:xlsx,csv'
-    ]);
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,csv'
+        ]);
 
-    $import = new StudentsImport();
-    $data = Excel::toArray($import, $request->file('file'));
-    $totalRows = count($data[0]);
-    $beforeCount = Student::count();
-    Excel::import($import, $request->file('file'));
-    $afterCount = Student::count();
-    $importedRows = $afterCount - $beforeCount;
+        $import = new StudentsImport();
+        $data = Excel::toArray($import, $request->file('file'));
+        $totalRows = count($data[0]);
+        $beforeCount = Student::count();
+        Excel::import($import, $request->file('file'));
+        $afterCount = Student::count();
+        $importedRows = $afterCount - $beforeCount;
 
-    $failures = $import->failures();
-    $skippedRows = count($failures);
+        $failures = $import->failures();
+        $skippedRows = count($failures);
 
-    $skippedNames = [];
+        $skippedNames = [];
 
-    foreach ($failures as $failure) {
+        foreach ($failures as $failure) {
 
-        $row = $failure->values();
+            $row = $failure->values();
 
-        if(isset($row['name'])){
-            $skippedNames[] = $row['name'];
+            if (isset($row['name'])) {
+                $skippedNames[] = $row['name'];
+            }
         }
-    }
 
-    $students = Student::orderBy('id','desc')->take($importedRows)->get();
+        $students = Student::orderBy('id', 'desc')->take($importedRows)->get();
 
-    $names = [];
+        $names = [];
 
-    foreach ($students as $student) {
+        foreach ($students as $student) {
 
-        $names[] = $student->name;
+            $names[] = $student->name;
 
-        $marks = json_decode($student->marks, true);
+            $marks = json_decode($student->marks, true);
 
-        if($marks && is_array($marks)){
+            if ($marks && is_array($marks)) {
 
-            $total = array_sum($marks);
-            $average = $total / count($marks);
+                $total = array_sum($marks);
+                $average = $total / count($marks);
 
-            $student->total = $total;
-            $student->average = $average;
-            $student->save();
+                $student->total = $total;
+                $student->average = $average;
+                $student->save();
+            }
         }
+
+        $namesList = implode(', ', $names);
+        $skippedList = implode(', ', $skippedNames);
+
+        return redirect()->back()->with(
+            'success',
+            "Excel Total Rows: $totalRows | Imported: $importedRows | Skipped: $skippedRows | Imported Students: $namesList | Skipped Students: $skippedList"
+        );
     }
-
-    $namesList = implode(', ', $names);
-    $skippedList = implode(', ', $skippedNames);
-
-    return redirect()->back()->with(
-        'success',
-        "Excel Total Rows: $totalRows | Imported: $importedRows | Skipped: $skippedRows | Imported Students: $namesList | Skipped Students: $skippedList"
-    );
-}
 
     public function marksForm($id)
     {
@@ -402,4 +403,68 @@ public function import(Request $request)
 
         return redirect()->route('students.index')->with('success', 'Marks Saved Successfully');
     }
+
+
+public function storeMarktable(Request $request)
+{
+    $marks = $request->subjectsmark;
+    $total = array_sum($marks);
+    $count = count($marks);
+    $average = $total / $count;
+
+    $data = Marktable::create([
+        'name' => $request->name,
+        'class' => $request->class,
+        'session' => $request->session,
+        'age' => $request->age,
+        'subjectsmark' => json_encode($marks),
+        'total' => $total,
+        'average' => $average
+    ]);
+
+    return response()->json([
+        'message' => 'Student Marks Added Successfully',
+        'data' => $data
+    ]);
+}
+
+
+
+public function updateMarktable(Request $request, $id)
+{
+    $marktable = Marktable::findOrFail($id);
+
+    $marks = $request->subjectsmark;
+    $total = array_sum($marks);
+    $average = $total / count($marks);
+
+    $marktable->update([
+        'name' => $request->name,
+        'class' => $request->class,
+        'session' => $request->session,
+        'age' => $request->age,
+        'subjectsmark' => json_encode($marks),
+        'total' => $total,
+        'average' => $average
+    ]);
+
+    return response()->json([
+        'message' => 'Student Marks Updated Successfully',
+        'data' => $marktable
+    ]);
+}
+
+
+public function deleteMarktable($id)
+{
+    $marktable = Marktable::findOrFail($id);
+
+    $marktable->delete();
+
+    return response()->json([
+        'message' => 'Student Marks Deleted Successfully'
+    ]);
+}
+
+
 }

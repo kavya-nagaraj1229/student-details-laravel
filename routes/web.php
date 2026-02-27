@@ -44,7 +44,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/students/{id}/marks', [StudentController::class, 'marksForm'])->name('students.marks');
     Route::post('/students/{id}/marks', [StudentController::class, 'storeMarks'])->name('students.marks.store');
-    
+ 
 
     });
 

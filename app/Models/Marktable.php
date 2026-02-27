@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Marktable extends Model
+{
+
+    protected $table = 'marktables';
+
+    protected $fillable = [
+        'name',
+        'class',
+        'session',
+        'age',
+        'subjectsmark',
+        'total',
+        'average'
+    ];
+
+    public $timestamps = false;
+}
