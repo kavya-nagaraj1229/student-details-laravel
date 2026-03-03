@@ -11,7 +11,7 @@ use Mpdf\Mpdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentsImport;
 use App\Exports\StudentsExportBlade;
-use App\Models\Marktable; 
+use App\Models\Marktable;
 
 class StudentController extends Controller
 {
@@ -404,67 +404,159 @@ class StudentController extends Controller
         return redirect()->route('students.index')->with('success', 'Marks Saved Successfully');
     }
 
+    public function updateMarktable(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'class' => 'required|string',
+            'session' => 'required|string',
+            'age' => 'required|integer',
+            'subjectsmark' => 'required|array',
+            'images.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ]);
 
-public function storeMarktable(Request $request)
-{
-    $marks = $request->subjectsmark;
-    $total = array_sum($marks);
-    $count = count($marks);
-    $average = $total / $count;
+        $marktable = Marktable::findOrFail($id);
 
-    $data = Marktable::create([
-        'name' => $request->name,
-        'class' => $request->class,
-        'session' => $request->session,
-        'age' => $request->age,
-        'subjectsmark' => json_encode($marks),
-        'total' => $total,
-        'average' => $average
-    ]);
-
-    return response()->json([
-        'message' => 'Student Marks Added Successfully',
-        'data' => $data
-    ]);
-}
+        $marks = $request->subjectsmark;
+        $total = array_sum($marks);
+        $average = $total / count($marks);
+        $uploadPath = public_path('uploads/images');
+        if (!file_exists($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
 
 
+        $newUploadedImages = [];
 
-public function updateMarktable(Request $request, $id)
-{
-    $marktable = Marktable::findOrFail($id);
+        if ($request->hasFile('images')) {
+            $files = $request->file('images');
 
-    $marks = $request->subjectsmark;
-    $total = array_sum($marks);
-    $average = $total / count($marks);
+            if (!is_array($files)) {
+                $files = [$files];
+            }
 
-    $marktable->update([
-        'name' => $request->name,
-        'class' => $request->class,
-        'session' => $request->session,
-        'age' => $request->age,
-        'subjectsmark' => json_encode($marks),
-        'total' => $total,
-        'average' => $average
-    ]);
+            foreach ($files as $file) {
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $file->move($uploadPath, $filename);
+                $newUploadedImages[] = $filename;
+            }
+        }
+        $allImages = ($newUploadedImages);
 
-    return response()->json([
-        'message' => 'Student Marks Updated Successfully',
-        'data' => $marktable
-    ]);
-}
+        $marktable->update([
+            'name' => $request->name,
+            'class' => $request->class,
+            'session' => $request->session,
+            'age' => $request->age,
+            'subjectsmark' => json_encode($marks),
+            'total' => $total,
+            'average' => $average,
+            'images' => !empty($allImages) ? json_encode($allImages) : null,
+        ]);
+
+        return response()->json([
+            'message' => 'Student Marks Updated Successfully',
+            'data' => $marktable
+        ]);
+    }
+
+    public function deleteMarktable($id)
+    {
+        $marktable = Marktable::findOrFail($id);
+
+        $marktable->delete();
+
+        return response()->json([
+            'message' => 'Student Marks Deleted Successfully'
+        ]);
+    }
 
 
-public function deleteMarktable($id)
-{
-    $marktable = Marktable::findOrFail($id);
+    public function storeMarktable(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'class' => 'required|string',
+            'session' => 'required|string',
+            'age' => 'required|integer',
+            'subjectsmark' => 'required|array',
+            'images.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ]);
 
-    $marktable->delete();
+        $marks = $request->subjectsmark;
+        $total = array_sum($marks);
+        $average = $total / count($marks);
 
-    return response()->json([
-        'message' => 'Student Marks Deleted Successfully'
-    ]);
-}
+        $imageNames = null;
+
+        if ($request->hasFile('images')) {
+            $uploaded = [];
+            $files = $request->file('images');
+
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+
+            foreach ($files as $file) {
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('uploads/images'), $filename);
+                $uploaded[] = $filename;
+            }
+
+            $imageNames = json_encode($uploaded);
+        }
+
+        $marktable = Marktable::create([
+            'name' => $request->name,
+            'class' => $request->class,
+            'session' => $request->session,
+            'age' => $request->age,
+            'subjectsmark' => json_encode($marks),
+            'total' => $total,
+            'average' => $average,
+            'images' => $imageNames,
+        ]);
+
+        return response()->json([
+            'message' => 'Student Marks Added Successfully',
+            'data' => $marktable
+        ]);
+    }
 
 
+    public function getMarktables(Request $request)
+    {
+        $name = $request->query('name');
+
+        if ($name) {
+            $student = Marktable::where('name', $name)->first();
+
+            if (!$student) {
+                return response()->json([
+                    'message' => 'Student not found'
+                ], 404);
+            }
+
+
+            if ($student->images) {
+                $images = json_decode($student->images, true);
+
+                $student->images = array_map(function ($img) {
+                    return url('uploads/images/' . $img);
+                }, $images);
+            }
+
+            return response()->json([
+                'message' => 'Single student data',
+                'data' => $student
+            ]);
+        }
+
+        $data = Marktable::all();
+
+        return response()->json([
+            'message' => 'All students data',
+            'data' => $data
+        ]);
+    }
 }

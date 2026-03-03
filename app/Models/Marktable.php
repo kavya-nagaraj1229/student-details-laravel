@@ -16,8 +16,10 @@ class Marktable extends Model
         'age',
         'subjectsmark',
         'total',
-        'average'
+        'average',
+        'images'
     ];
+    
 
     public $timestamps = false;
 }

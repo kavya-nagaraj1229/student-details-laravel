@@ -16,6 +16,9 @@ return new class extends Migration
             $table->string('session');
             $table->integer('age');
             $table->json('subjectsmark');
+            $table->integer('total');
+            $table->float('average');
+            $table->text('images')->nullable();
 
         });
     }
