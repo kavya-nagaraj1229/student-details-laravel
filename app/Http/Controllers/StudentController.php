@@ -524,19 +524,77 @@ class StudentController extends Controller
     }
 
 
+
     public function getMarktables(Request $request)
     {
-        $name = $request->query('name');
+        $query = Marktable::query();
 
-        if ($name) {
-            $student = Marktable::where('name', $name)->first();
+        if ($request->name) {
+            $query->where('name', $request->name);
+        }
 
-            if (!$student) {
-                return response()->json([
-                    'message' => 'Student not found'
-                ], 404);
+        if ($request->class) {
+            $query->where('class', $request->class);
+        }
+
+        if ($request->has('total') && $request->has('condition')) {
+
+            $allowedOperators = ['>', '<', '>=', '<=', '='];
+
+            if (in_array($request->condition, $allowedOperators)) {
+                $query->where('total', $request->condition, $request->total);
             }
+        }
 
+
+        if ($request->has('maths') && $request->has('maths_condition')) {
+
+            $allowedOperators = ['>', '<', '>=', '<=', '='];
+
+            if (in_array($request->maths_condition, $allowedOperators)) {
+
+                $query->whereRaw(
+                    "CAST(JSON_UNQUOTE(JSON_EXTRACT(subjectsmark, '$.maths')) AS UNSIGNED) {$request->maths_condition} ?",
+                    [$request->maths]
+                );
+            }
+        }
+        if ($request->has('tamil') && $request->has('tamil_condition')) {
+
+            $allowedOperators = ['>', '<', '>=', '<=', '='];
+
+            if (in_array($request->tamil_condition, $allowedOperators)) {
+
+                $query->whereRaw(
+                    "CAST(JSON_UNQUOTE(JSON_EXTRACT(subjectsmark, '$.tamil')) AS UNSIGNED) {$request->tamil_condition} ?",
+                    [$request->tamil]
+                );
+            }
+        }
+
+        if ($request->has('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'LIKE', '%' . $request->search . '%')
+                    ->orWhere('class', 'LIKE', '%' . $request->search . '%')
+                    ->orWhere('age','LIKE','%'. $request->search . '%')
+                     ->orWhere('session','LIKE','%'. $request->search . '%')
+                      ->orWhere('total','LIKE','%'. $request->search . '%')
+                       ->orWhere('average','LIKE','%'. $request->search . '%');
+            });
+        }
+
+
+
+
+        $students = $query->get();
+
+        if ($students->isEmpty()) {
+            return response()->json([
+                'message' => 'No students found'
+            ], 404);
+        }
+
+        $students->transform(function ($student) {
 
             if ($student->images) {
                 $images = json_decode($student->images, true);
@@ -546,17 +604,12 @@ class StudentController extends Controller
                 }, $images);
             }
 
-            return response()->json([
-                'message' => 'Single student data',
-                'data' => $student
-            ]);
-        }
-
-        $data = Marktable::all();
+            return $student;
+        });
 
         return response()->json([
-            'message' => 'All students data',
-            'data' => $data
+            'message' => 'All Student data',
+            'data' => $students
         ]);
     }
 }
