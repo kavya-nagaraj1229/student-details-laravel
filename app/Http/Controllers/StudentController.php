@@ -471,63 +471,74 @@ class StudentController extends Controller
         ]);
     }
 
+public function storeMarktable(Request $request)
+{
+    $request->validate([
+        'student_id' => 'required|integer',    
+        'name' => 'required|string',
+        'class' => 'required|string',
+        'session' => 'required|string',
+        'age' => 'required|integer',
+        'subjectsmark' => 'required|array',
+        'images.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+    ]);
 
-    public function storeMarktable(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string',
-            'class' => 'required|string',
-            'session' => 'required|string',
-            'age' => 'required|integer',
-            'subjectsmark' => 'required|array',
-            'images.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ]);
+    $marks = $request->subjectsmark;
+    $total = array_sum($marks);
+    $average = $total / count($marks);
 
-        $marks = $request->subjectsmark;
-        $total = array_sum($marks);
-        $average = $total / count($marks);
+    $imageNames = null;
+    if ($request->hasFile('images')) {
+        $uploaded = [];
+        $files = $request->file('images');
 
-        $imageNames = null;
-
-        if ($request->hasFile('images')) {
-            $uploaded = [];
-            $files = $request->file('images');
-
-            if (!is_array($files)) {
-                $files = [$files];
-            }
-
-            foreach ($files as $file) {
-                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads/images'), $filename);
-                $uploaded[] = $filename;
-            }
-
-            $imageNames = json_encode($uploaded);
+        if (!is_array($files)) {
+            $files = [$files];
         }
 
-        $marktable = Marktable::create([
-            'name' => $request->name,
-            'class' => $request->class,
-            'session' => $request->session,
-            'age' => $request->age,
-            'subjectsmark' => json_encode($marks),
-            'total' => $total,
-            'average' => $average,
-            'images' => $imageNames,
-        ]);
+        foreach ($files as $file) {
+            $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+            
+            if (!file_exists(public_path('uploads/images'))) {
+                mkdir(public_path('uploads/images'), 0755, true);
+            }
 
-        return response()->json([
-            'message' => 'Student Marks Added Successfully',
-            'data' => $marktable
-        ]);
+            $file->move(public_path('uploads/images'), $filename);
+            $uploaded[] = $filename;
+        }
+
+        $imageNames = json_encode($uploaded);
     }
 
+    $marktable = Marktable::create([
+        'student_id' => $request->student_id,
+        'name' => $request->name,
+        'class' => $request->class,
+        'session' => $request->session,
+        'age' => $request->age,
+        'subjectsmark' => json_encode($marks),
+        'total' => $total,
+        'average' => $average,
+        'images' => $imageNames,
+    ]);
 
+    return response()->json([
+        'message' => 'Student Marks Added Successfully',
+        'data' => $marktable
+    ]);
+}
 
     public function getMarktables(Request $request)
     {
+        $user = $request->user();
+
+    if ($user->role == 'admin') {
         $query = Marktable::query();
+    } else {
+        $query = Marktable::where('student_id', $user->student_id);
+    }
+
+    if ($user->role == 'admin') {
 
         if ($request->name) {
             $query->where('name', $request->name);
@@ -545,7 +556,7 @@ class StudentController extends Controller
                 $query->where('total', $request->condition, $request->total);
             }
         }
-
+    
 
         if ($request->has('maths') && $request->has('maths_condition')) {
 
@@ -576,10 +587,10 @@ class StudentController extends Controller
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'LIKE', '%' . $request->search . '%')
                     ->orWhere('class', 'LIKE', '%' . $request->search . '%')
-                    ->orWhere('age','LIKE','%'. $request->search . '%')
-                     ->orWhere('session','LIKE','%'. $request->search . '%')
-                      ->orWhere('total','LIKE','%'. $request->search . '%')
-                       ->orWhere('average','LIKE','%'. $request->search . '%');
+                    ->orWhere('age', 'LIKE', '%' . $request->search . '%')
+                    ->orWhere('session', 'LIKE', '%' . $request->search . '%')
+                    ->orWhere('total', 'LIKE', '%' . $request->search . '%')
+                    ->orWhere('average', 'LIKE', '%' . $request->search . '%');
             });
         }
 
@@ -612,4 +623,27 @@ class StudentController extends Controller
             'data' => $students
         ]);
     }
+    }
+
+ public function login(Request $request)
+{
+
+
+    $user = User::where('username', $request->username)->first();
+
+    if (!$user) {
+        return response()->json(['message' => 'User not found'], 404);
+    }
+
+    if (!Hash::check($request->password, $user->password)) {
+        return response()->json(['message' => 'Password wrong'], 401);
+    }
+
+    $token = $user->createToken('api-token')->plainTextToken;
+
+    return response()->json([
+        'token' => $token,
+        'role' => $user->role
+    ]);
+}
 }

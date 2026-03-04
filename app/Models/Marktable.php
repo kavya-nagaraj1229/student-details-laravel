@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Marktable extends Model
 {
-
     protected $table = 'marktables';
 
     protected $fillable = [
+        'student_id', 
         'name',
         'class',
         'session',
@@ -19,7 +19,6 @@ class Marktable extends Model
         'average',
         'images'
     ];
-    
 
     public $timestamps = false;
 }

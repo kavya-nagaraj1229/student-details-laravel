@@ -10,7 +10,7 @@ class RoleCheck
 {
     public function handle(Request $request, Closure $next, $role)
     {
-        $user = $request->user(); // Sanctum user
+        $user = $request->user(); 
 
         if (!$user || $user->role !== $role) {
             abort(403, 'Unauthorized');
