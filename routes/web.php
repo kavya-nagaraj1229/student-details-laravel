@@ -39,7 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/my/pdf', [StudentController::class, 'myPdf'])->name('students.my.pdf');
     Route::get('/my/excel', [StudentController::class, 'myExcel'])->name('students.my.excel');
 
-    Route::get('students/{student}', [StudentController::class, 'show'])->name('students.show');
+    Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
     Route::post('/import-students', [StudentController::class, 'import'])->name('students.import');
 
     Route::get('/students/{id}/marks', [StudentController::class, 'marksForm'])->name('students.marks');

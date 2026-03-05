@@ -198,7 +198,6 @@ Update Student
 
 </div>
 
-{{-- Modal for File Preview --}}
 <div id="fileModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex justify-center items-center z-50">
     <div class="bg-white p-4 rounded relative max-w-[90vw] max-h-[90vh]">
         <button onclick="closeModal()" class="absolute top-2 right-2 text-red-600 font-bold text-3xl">X</button>

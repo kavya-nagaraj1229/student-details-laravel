@@ -15,9 +15,11 @@ use App\Models\Marktable;
 
 class StudentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+
+        $activeTab = $request->query('tab', 'personal');
 
         if ($user->role == 'admin') {
             $students = Student::all();
@@ -25,7 +27,7 @@ class StudentController extends Controller
             $students = Student::where('id', $user->student_id)->get();
         }
 
-        return view('students.index', compact('students'));
+        return view('students.index', compact('students', 'activeTab'));
     }
 
 
@@ -298,11 +300,14 @@ class StudentController extends Controller
         return Excel::download(new StudentsExportBlade($student), 'my_details.xlsx');
     }
 
-    public function show($id)
-    {
-        $student = Student::findOrFail($id);
-        return view('students.show', compact('student'));
-    }
+public function show($id)
+{
+    $student = Student::findOrFail($id);
+
+    $activeTab = request()->query('tab', 'personal');
+
+    return view('students.show', compact('student', 'activeTab'));
+}
 
     public function import(Request $request)
     {
