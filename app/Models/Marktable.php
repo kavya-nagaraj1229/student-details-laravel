@@ -9,7 +9,7 @@ class Marktable extends Model
     protected $table = 'marktables';
 
     protected $fillable = [
-        'student_id', 
+        'student_id',
         'name',
         'class',
         'session',
@@ -21,4 +21,9 @@ class Marktable extends Model
     ];
 
     public $timestamps = false;
+
+    public function user()
+    {
+        return $this->belongsTo(User::class,'student_id','student_id');
+    }
 }

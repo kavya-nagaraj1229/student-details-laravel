@@ -413,6 +413,7 @@ class StudentController extends Controller
             'age' => 'required|integer',
             'subjectsmark' => 'required|array',
             'images.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'student_id' => 'required|integer',
         ]);
 
         $marktable = Marktable::findOrFail($id);
@@ -452,6 +453,7 @@ class StudentController extends Controller
             'total' => $total,
             'average' => $average,
             'images' => !empty($allImages) ? json_encode($allImages) : null,
+            'student_id' => $request->student_id,
         ]);
 
         return response()->json([
@@ -471,77 +473,87 @@ class StudentController extends Controller
         ]);
     }
 
-public function storeMarktable(Request $request)
-{
-    $request->validate([
-        'student_id' => 'required|integer',    
-        'name' => 'required|string',
-        'class' => 'required|string',
-        'session' => 'required|string',
-        'age' => 'required|integer',
-        'subjectsmark' => 'required|array',
-        'images.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-    ]);
+    public function storeMarktable(Request $request)
+    {
 
-    $marks = $request->subjectsmark;
-    $total = array_sum($marks);
-    $average = $total / count($marks);
+        $request->validate([
+            'student_id' => 'required|integer',
+            'name' => 'required|string',
+            'class' => 'required|string',
+            'session' => 'required|string',
+            'age' => 'required|integer',
+            'subjectsmark' => 'required|array',
+            'images.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ]);
 
-    $imageNames = null;
-    if ($request->hasFile('images')) {
-        $uploaded = [];
-        $files = $request->file('images');
+        $marks = $request->subjectsmark;
+        $total = array_sum($marks);
+        $average = $total / count($marks);
 
-        if (!is_array($files)) {
-            $files = [$files];
-        }
+        $imageNames = null;
 
-        foreach ($files as $file) {
-            $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
-            
-            if (!file_exists(public_path('uploads/images'))) {
-                mkdir(public_path('uploads/images'), 0755, true);
+        if ($request->hasFile('images')) {
+
+            $uploaded = [];
+            $files = $request->file('images');
+
+            if (!is_array($files)) {
+                $files = [$files];
             }
 
-            $file->move(public_path('uploads/images'), $filename);
-            $uploaded[] = $filename;
+            foreach ($files as $file) {
+
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+
+                if (!file_exists(public_path('uploads/images'))) {
+                    mkdir(public_path('uploads/images'), 0755, true);
+                }
+
+                $file->move(public_path('uploads/images'), $filename);
+
+                $uploaded[] = $filename;
+            }
+
+            $imageNames = json_encode($uploaded);
         }
 
-        $imageNames = json_encode($uploaded);
+        $user = User::create([
+            'username' => $request->name,
+            'password' => Hash::make('123456'),
+            'role' => 'student',
+            'student_id' => $request->student_id
+        ]);
+
+        $marktable = Marktable::create([
+            'student_id' => $request->student_id,
+            'name' => $request->name,
+            'class' => $request->class,
+            'session' => $request->session,
+            'age' => $request->age,
+            'subjectsmark' => json_encode($marks),
+            'total' => $total,
+            'average' => $average,
+            'images' => $imageNames,
+        ]);
+
+
+        return response()->json([
+            'message' => 'Student Added Successfully',
+            'user' => $user,
+            'marktable' => $marktable
+        ]);
     }
 
-    $marktable = Marktable::create([
-        'student_id' => $request->student_id,
-        'name' => $request->name,
-        'class' => $request->class,
-        'session' => $request->session,
-        'age' => $request->age,
-        'subjectsmark' => json_encode($marks),
-        'total' => $total,
-        'average' => $average,
-        'images' => $imageNames,
-    ]);
 
-    return response()->json([
-        'message' => 'Student Marks Added Successfully',
-        'data' => $marktable
-    ]);
-}
+
 
     public function getMarktables(Request $request)
     {
-        $user = $request->user();
-
-    if ($user->role == 'admin') {
         $query = Marktable::query();
-    } else {
-        $query = Marktable::where('student_id', $user->student_id);
-    }
 
-    if ($user->role == 'admin') {
 
-        if ($request->name) {
-            $query->where('name', $request->name);
+        if ($request->student_id) {
+            $query->where('student_id', $request->student_id);
         }
 
         if ($request->class) {
@@ -556,7 +568,7 @@ public function storeMarktable(Request $request)
                 $query->where('total', $request->condition, $request->total);
             }
         }
-    
+
 
         if ($request->has('maths') && $request->has('maths_condition')) {
 
@@ -570,6 +582,7 @@ public function storeMarktable(Request $request)
                 );
             }
         }
+
         if ($request->has('tamil') && $request->has('tamil_condition')) {
 
             $allowedOperators = ['>', '<', '>=', '<=', '='];
@@ -583,6 +596,7 @@ public function storeMarktable(Request $request)
             }
         }
 
+
         if ($request->has('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'LIKE', '%' . $request->search . '%')
@@ -595,8 +609,6 @@ public function storeMarktable(Request $request)
         }
 
 
-
-
         $students = $query->get();
 
         if ($students->isEmpty()) {
@@ -604,6 +616,7 @@ public function storeMarktable(Request $request)
                 'message' => 'No students found'
             ], 404);
         }
+
 
         $students->transform(function ($student) {
 
@@ -618,32 +631,48 @@ public function storeMarktable(Request $request)
             return $student;
         });
 
+
         return response()->json([
             'message' => 'All Student data',
             'data' => $students
         ]);
     }
+
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string'
+        ]);
+
+        $user = User::where('username', $request->username)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Invalid password'
+            ], 401);
+        }
+
+        $user->tokens()->delete();
+
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login successful',
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'role' => $user->role,
+                'student_id' => $user->student_id
+            ]
+        ]);
     }
-
- public function login(Request $request)
-{
-
-
-    $user = User::where('username', $request->username)->first();
-
-    if (!$user) {
-        return response()->json(['message' => 'User not found'], 404);
-    }
-
-    if (!Hash::check($request->password, $user->password)) {
-        return response()->json(['message' => 'Password wrong'], 401);
-    }
-
-    $token = $user->createToken('api-token')->plainTextToken;
-
-    return response()->json([
-        'token' => $token,
-        'role' => $user->role
-    ]);
-}
 }

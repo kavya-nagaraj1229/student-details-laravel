@@ -7,7 +7,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens; 
+    use HasApiTokens;
 
     protected $table = 'users';
 
@@ -15,5 +15,10 @@ class User extends Authenticatable
 
     protected $hidden = ['password'];
 
-    public $timestamps = false; 
+    public $timestamps = false;
+
+    public function marktable()
+    {
+        return $this->hasOne(Marktable::class,'student_id','student_id');
+    }
 }
